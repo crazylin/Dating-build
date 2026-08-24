@@ -10,7 +10,7 @@ on:
         description: Git tag to build (for example v0.1.0)
         required: true
         type: string
-        default: v0.1.3
+        default: v0.0.11
 
 permissions:
   contents: read
@@ -72,6 +72,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: webfactory/ssh-agent@v0.9.0
+        if: ${{ secrets.PD_CLONE_SSH_KEY != '' }}
         with:
           ssh-private-key: ${{ secrets.PD_CLONE_SSH_KEY }}
       - name: Clone private PD
@@ -115,6 +116,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: webfactory/ssh-agent@v0.9.0
+        if: ${{ secrets.PD_CLONE_SSH_KEY != '' }}
         with:
           ssh-private-key: ${{ secrets.PD_CLONE_SSH_KEY }}
       - name: Clone private PD
@@ -181,6 +183,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: webfactory/ssh-agent@v0.9.0
+        if: ${{ secrets.PD_CLONE_SSH_KEY != '' }}
         with:
           ssh-private-key: ${{ secrets.PD_CLONE_SSH_KEY }}
       - name: Clone private PD
@@ -253,6 +256,7 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: webfactory/ssh-agent@v0.9.0
+        if: ${{ secrets.PD_CLONE_SSH_KEY != '' }}
         with:
           ssh-private-key: ${{ secrets.PD_CLONE_SSH_KEY }}
       - name: Clone private PD
@@ -323,6 +327,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: webfactory/ssh-agent@v0.9.0
+        if: ${{ secrets.PD_CLONE_SSH_KEY != '' }}
         with:
           ssh-private-key: ${{ secrets.PD_CLONE_SSH_KEY }}
       - name: Clone private PD
@@ -411,6 +416,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: webfactory/ssh-agent@v0.9.0
+        if: ${{ secrets.PD_CLONE_SSH_KEY != '' }}
         with:
           ssh-private-key: ${{ secrets.PD_CLONE_SSH_KEY }}
       - name: Clone private PD (publish scripts)
