@@ -1,0 +1,92 @@
+name: Publish Dating R2 only
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (for example v0.1.0)
+        required: true
+        type: string
+        default: v0.1.0
+      run_id:
+        description: Optional Dating-build run ID that already uploaded artifacts
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  publish-r2:
+    name: Publish installers to R2
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PD_CLONE_SSH_KEY }}
+      - name: Clone private PD (publish scripts)
+        env:
+          GH_PAT: ${{ secrets.PD_CLONE_PAT }}
+        run: |
+          set -euo pipefail
+          set +x
+          if ssh-add -l >/dev/null 2>&1; then
+            GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=yes' \
+              git clone --depth 1 --branch "$TAG" git@github.com:crazylin/Dating.git dating-src
+          elif [ -n "${GH_PAT:-}" ]; then
+            git clone --depth 1 --branch "$TAG" "https://x-access-token:${GH_PAT}@github.com/crazylin/Dating.git" dating-src
+          else
+            echo "PD_CLONE_SSH_KEY or PD_CLONE_PAT secret is required" >&2
+            exit 1
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+      - name: Download build artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          if [ -n "$RUN_ID" ]; then
+            gh run download "$RUN_ID" --repo crazylin/Dating-build --dir artifacts
+          else
+            echo "run_id is required until a fresh build uploads artifacts" >&2
+            exit 1
+          fi
+          find artifacts -type f | head -20
+      - name: Upload installers to R2 and sync license server
+        working-directory: dating-src
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_DOWNLOAD_BASE: ${{ secrets.R2_DOWNLOAD_BASE }}
+          TALKY_LICENSE_SERVER_URL: ${{ secrets.TALKY_LICENSE_SERVER_URL }}
+          TALKY_LICENSE_DEPLOY_TOKEN: ${{ secrets.TALKY_LICENSE_DEPLOY_TOKEN }}
+          RELEASE_VERSION: ${{ inputs.tag }}
+          RELEASE_NOTES: Dating ${{ inputs.tag }} (published from Dating-build)
+          PUBLISH_PLATFORMS: all
+        run: |
+          set -euo pipefail
+          RELEASE_DIR="${{ runner.temp }}/dating-release"
+          ARTIFACTS_DIR="${{ github.workspace }}/artifacts"
+          mkdir -p "$RELEASE_DIR"
+          while IFS= read -r f; do
+            [[ -f "$f" ]] || continue
+            base="$(basename "$f")"
+            case "$base" in
+              Dating-*-win-x64.exe|Dating-*-win7-x64.exe|Dating-*-mac-*.dmg|Dating-*-linux-x64.AppImage|Dating-*-app.zip) ;;
+              *) continue ;;
+            esac
+            cp "$f" "$RELEASE_DIR/$base"
+          done < <(find "$ARTIFACTS_DIR" -type f)
+          ls -la "$RELEASE_DIR"
+          test "$(find "$RELEASE_DIR" -maxdepth 1 -type f | wc -l | tr -d ' ')" -gt 0
+          export RELEASE_DIR
+          set +x
+          node scripts/publish-r2-updates.mjs
