@@ -12,7 +12,7 @@
 | `set-min-update-id.yml` | PATCH `dating.min_update_id` |
 | `prune-r2-versions.yml` | 按前缀清理 R2 旧版本 |
 
-## Secrets（与 TalkyTimes-build 同名）
+## Secrets
 
 - `PD_CLONE_SSH_KEY` 或 `PD_CLONE_PAT`：clone 私有 Dating 仓
 - `R2_*`、`TALKY_LICENSE_SERVER_URL`、`TALKY_LICENSE_DEPLOY_TOKEN`、`TALKY_LICENSE_ADMIN_TOKEN`

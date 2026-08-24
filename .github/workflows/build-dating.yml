@@ -389,7 +389,11 @@ jobs:
             echo "PD_CLONE_PAT secret is required" >&2
             exit 1
           fi
-          git clone --depth 1 --branch "$TAG" "https://x-access-token:${GH_PAT}@github.com/crazylin/Dating.git" dating-src
+          # 打包 job clone 的是该 tag，但这一步必须 clone main：publish 读的是
+          # scripts/publish-r2-updates.mjs 与 core/internal/api/release-notes.txt，
+          # 都要用发布时 main 上的最新版本。clone tag 会永远停在打 tag 那一刻的
+          # 旧脚本，脚本修了也拿不到。与 TalkyTimes-build 的做法保持一致。
+          git clone --depth 1 --branch main "https://x-access-token:${GH_PAT}@github.com/crazylin/Dating.git" dating-src
       - uses: actions/setup-node@v4
         with:
           node-version: "24.x"

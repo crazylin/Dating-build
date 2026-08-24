@@ -34,7 +34,9 @@ jobs:
             echo "PD_CLONE_PAT secret is required" >&2
             exit 1
           fi
-          git clone --depth 1 --branch "$TAG" "https://x-access-token:${GH_PAT}@github.com/crazylin/Dating.git" dating-src
+          # 同 build-dating.yml 的 publish 步骤：读的是 main 上的发布脚本与
+          # release-notes，不是 tag 上的旧副本。
+          git clone --depth 1 --branch main "https://x-access-token:${GH_PAT}@github.com/crazylin/Dating.git" dating-src
       - uses: actions/setup-node@v4
         with:
           node-version: "24.x"

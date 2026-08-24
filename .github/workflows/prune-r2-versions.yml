@@ -26,7 +26,7 @@ jobs:
             echo "PD_CLONE_PAT secret is required" >&2
             exit 1
           fi
-          git clone --depth 1 --branch cursor/dating-scaffold-1330 "https://x-access-token:${GH_PAT}@github.com/crazylin/Dating.git" dating-src
+          git clone --depth 1 --branch main "https://x-access-token:${GH_PAT}@github.com/crazylin/Dating.git" dating-src
       - uses: actions/setup-node@v4
         with:
           node-version: "24.x"
